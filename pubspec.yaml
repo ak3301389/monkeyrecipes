@@ -44,6 +44,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
@@ -59,3 +60,16 @@ flutter:
           weight: 600
         - asset: assets/fonts/Manrope-Bold.ttf
           weight: 700
+
+          
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#B85C38"
+    theme_color: "#B85C38"
+  adaptive_icon_background: "#B85C38"
+  adaptive_icon_foreground: "assets/icon/icon.png"
