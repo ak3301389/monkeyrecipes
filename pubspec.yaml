@@ -1,0 +1,61 @@
+name: recipes_book
+description: "Книга рецептов"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.4
+  firebase_auth: ^5.3.1
+
+  # Локальное хранилище
+  shared_preferences: ^2.3.2
+
+  # Сеть / обновления / файлы
+  dio: ^5.7.0
+  url_launcher: ^6.3.0
+  open_filex: ^4.5.0
+  path_provider: ^2.1.4
+
+    # Утилиты
+  intl: ^0.20.3
+  package_info_plus: ^8.1.0
+
+    # UI
+  dynamic_color: ^1.7.0
+
+  # Фото
+  image_picker: ^1.1.2
+  image: ^4.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Manrope-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
