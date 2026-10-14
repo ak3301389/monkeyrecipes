@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,8 +11,6 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/storage_service.dart';
-import 'services/update_service.dart';
-import 'widgets/update_dialog.dart';
 import 'sync_controller.dart';
 import 'theme.dart';
 
@@ -22,29 +19,13 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SyncController.instance.start();
   runApp(const RecipesBookApp());
-  // Автопроверка обновлений — после первого кадра, чтобы не тормозить запуск.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _checkForUpdates();
-  });
-}
-
-Future<void> _checkForUpdates() async {
-  final info = await UpdateService.instance.checkForUpdate();
-  if (info == null) return;
-  final ctx = navigatorKey.currentContext;
-  if (ctx == null) return;
-  if (!ctx.mounted) return;
-  showDialog(
-    context: ctx,
-    builder: (_) => UpdateDialog(info: info),
-  );
 }
 
 /// Глобальный нотификатор режима темы.
 final ValueNotifier<AppThemeMode> themeModeNotifier =
     ValueNotifier<AppThemeMode>(AppThemeMode.system);
 
-/// Глобальный ключ навигатора — нужен для показа диалогов из `main`.
+/// Глобальный ключ навигатора.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class RecipesBookApp extends StatelessWidget {
@@ -94,7 +75,6 @@ class RecipesBookApp extends StatelessWidget {
 }
 
 /// Загружает сохранённый режим темы перед показом главного экрана.
-/// Слушает состояние входа и решает, что показать: приложение или экран входа.
 class _Bootstrap extends StatefulWidget {
   const _Bootstrap();
 
