@@ -15,6 +15,7 @@ class StorageService {
   static const _kThemeMode = 'theme_mode';
   static const _kIngredientNames = 'ingredient_names';
   static const _kIngredientUnits = 'ingredient_units';
+  static const _kShoppingItems = 'shopping_items';
 
   SharedPreferences? _prefs;
 
@@ -67,7 +68,7 @@ class StorageService {
     await p.setString(_kCategories, raw);
   }
 
-    // ───────── Справочник ингредиентов ─────────
+  // ───────── Справочник ингредиентов ─────────
 
   Future<List<String>> loadIngredientNames() async {
     final p = await _p();
@@ -77,12 +78,9 @@ class StorageService {
 
   Future<void> saveIngredientNames(List<String> names) async {
     final p = await _p();
-    final cleaned = names
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final cleaned =
+        names.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet().toList()
+          ..sort();
     await p.setStringList(_kIngredientNames, cleaned);
   }
 
@@ -136,6 +134,28 @@ class StorageService {
       if (t.isNotEmpty) set.add(t);
     }
     await saveIngredientUnits(set.toList());
+  }
+
+  // ───────── Список покупок ─────────
+
+  Future<List<ShoppingItem>> loadShoppingItems() async {
+    final p = await _p();
+    final raw = p.getString(_kShoppingItems);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list
+          .map((e) => ShoppingItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveShoppingItems(List<ShoppingItem> items) async {
+    final p = await _p();
+    final raw = jsonEncode(items.map((e) => e.toJson()).toList());
+    await p.setString(_kShoppingItems, raw);
   }
 
   // ───────── Тема ─────────

@@ -14,6 +14,7 @@ import 'categories_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
 import 'search_screen.dart';
+import 'shopping_list_screen.dart';
 
 /// Главный экран приложения с нижней навигацией.
 /// На широких экранах (Web, планшет) навигация переезжает в NavigationRail слева.
@@ -94,6 +95,11 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Избранное',
           ),
           NavigationDestination(
+            icon: Icon(Icons.shopping_cart_outlined),
+            selectedIcon: Icon(Icons.shopping_cart),
+            label: 'Покупки',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
             label: 'Настройки',
@@ -132,6 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: Text('Избранное'),
                   ),
                   NavigationRailDestination(
+                    icon: Icon(Icons.shopping_cart_outlined),
+                    selectedIcon: Icon(Icons.shopping_cart),
+                    label: Text('Покупки'),
+                  ),
+                  NavigationRailDestination(
                     icon: Icon(Icons.settings_outlined),
                     selectedIcon: Icon(Icons.settings),
                     label: Text('Настройки'),
@@ -149,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   AppBar _buildAppBar() {
-    const titles = ['Рецепты', 'Избранное', 'Настройки'];
+    const titles = ['Рецепты', 'Избранное', 'Покупки', 'Настройки'];
     return AppBar(
       title: Text(titles[_tabIndex]),
       actions: [
@@ -328,8 +339,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       case 1:
-        return const _FavoritesTab();
+        return _RecipesTab(
+          recipes: _recipes.where((r) => r.favorite).toList(),
+          categories: _categories,
+          onOpen: _openRecipe,
+          onFavorite: _toggleFavorite,
+          onDelete: _confirmDeleteRecipe,
+        );
       case 2:
+        return ShoppingListScreen(key: ValueKey(_tabIndex));
+      case 3:
         return ValueListenableBuilder<AppThemeMode>(
           valueListenable: themeModeNotifier,
           builder: (context, mode, _) => _SettingsTab(

@@ -131,3 +131,45 @@ class Recipe {
   factory Recipe.fromJsonString(String source) =>
       Recipe.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }
+
+
+/// Элемент списка покупок.
+class ShoppingItem {
+  String id;
+  String name;
+  double amount;
+  String unit;
+  bool done;
+  String recipeId;
+  String recipeTitle;
+
+  ShoppingItem({
+    required this.id,
+    required this.name,
+    this.amount = 0,
+    this.unit = '',
+    this.done = false,
+    this.recipeId = '',
+    this.recipeTitle = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'amount': amount,
+        'unit': unit,
+        'done': done,
+        'recipeId': recipeId,
+        'recipeTitle': recipeTitle,
+      };
+
+  factory ShoppingItem.fromJson(Map<String, dynamic> json) => ShoppingItem(
+        id: json['id'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        amount: (json['amount'] as num?)?.toDouble() ?? 0,
+        unit: json['unit'] as String? ?? '',
+        done: json['done'] as bool? ?? false,
+        recipeId: json['recipeId'] as String? ?? '',
+        recipeTitle: json['recipeTitle'] as String? ?? '',
+      );
+}

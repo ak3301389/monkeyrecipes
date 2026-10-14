@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../services/photo_service.dart';
+import '../services/storage_service.dart';
 import 'photo_view_screen.dart';
 import 'recipe_edit_screen.dart';
 
@@ -61,6 +62,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       appBar: AppBar(
         title: Text(_recipe.title),
         actions: [
+          IconButton(
+            tooltip: 'В список покупок',
+            onPressed: _addToShoppingList,
+            icon: const Icon(Icons.add_shopping_cart),
+          ),
           IconButton(
             tooltip: _recipe.favorite ? 'Убрать из избранного' : 'В избранное',
             onPressed: _toggleFavorite,
@@ -256,6 +262,57 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         builder: (_) => PhotoViewScreen(photos: [bytes], initialIndex: 0),
       ),
     );
+  }
+
+  Future<void> _addToShoppingList() async {
+    if (_recipe.ingredients.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('В рецепте нет ингредиентов')),
+        );
+      return;
+    }
+    final s = StorageService.instance;
+    final existing = await s.loadShoppingItems();
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final added = <ShoppingItem>[];
+    var counter = 0;
+    for (final ing in _recipe.ingredients) {
+      // Объединение только при совпадении названия и единицы (регистр не важен).
+      final idx = existing.indexWhere(
+        (e) =>
+            !e.done &&
+            e.name.toLowerCase() == ing.name.toLowerCase() &&
+            e.unit.toLowerCase() == ing.unit.toLowerCase(),
+      );
+      if (idx >= 0) {
+        existing[idx].amount += ing.amount;
+      } else {
+        existing.add(
+          ShoppingItem(
+            id: '${now}_${counter++}',
+            name: ing.name,
+            amount: ing.amount,
+            unit: ing.unit,
+            recipeId: _recipe.id,
+            recipeTitle: _recipe.title,
+          ),
+        );
+        added.add(existing.last);
+      }
+    }
+
+    await s.saveShoppingItems(existing);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Добавлено в список покупок: ${added.length} поз.'),
+        ),
+      );
   }
 
   void _openPhotoFullscreen(int initialIndex) {
