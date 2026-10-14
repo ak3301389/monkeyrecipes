@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,11 +12,13 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/storage_service.dart';
+import 'sync_controller.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  SyncController.instance.start();
   runApp(const RecipesBookApp());
 }
 
@@ -81,27 +84,11 @@ class _BootstrapState extends State<_Bootstrap> {
   bool _themeReady = false;
   bool _skipAuth = false;
   bool _skipAuthLoaded = false;
-  User? _user;
-  bool _authChecked = false;
-  StreamSubscription<User?>? _authSub;
 
   @override
   void initState() {
     super.initState();
     _load();
-    _authSub = AuthService.instance.authStateChanges().listen((user) {
-      if (!mounted) return;
-      setState(() {
-        _user = user;
-        _authChecked = true;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _authSub?.cancel();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -131,11 +118,13 @@ class _BootstrapState extends State<_Bootstrap> {
     if (!_themeReady || !_skipAuthLoaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (!_authChecked) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (_user != null) return const HomeScreen();
-    if (_skipAuth) return const HomeScreen();
-    return AuthScreen(onSkip: _skipAuthAndContinue);
+    return ValueListenableBuilder<User?>(
+      valueListenable: AuthService.instance.userNotifier,
+      builder: (context, user, _) {
+        if (user != null) return const HomeScreen();
+        if (_skipAuth) return const HomeScreen();
+        return AuthScreen(onSkip: _skipAuthAndContinue);
+      },
+    );
   }
 }

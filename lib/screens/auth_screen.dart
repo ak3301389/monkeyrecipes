@@ -1,8 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 
-/// Экран входа. Показывается, когда пользователь не авторизован.
+/// Экран входа через Google.
 class AuthScreen extends StatefulWidget {
   final VoidCallback? onSkip;
 
@@ -13,28 +14,33 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool _busy = false;
-  String? _error;
-
   Future<void> _signIn() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
     try {
-      final user = await AuthService.instance.signInWithGoogle();
+      await AuthService.instance.signInWithGoogle();
       if (!mounted) return;
-      if (user == null) {
-        // Пользователь закрыл попап, не выбрав аккаунт.
-        setState(() => _busy = false);
-      }
-      // Если user != null — Bootstrap сам переключит экран через authStateChanges.
+      // Ничего не делаем — userNotifier переключит экран.
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = 'Не удалось войти: $e';
-        _busy = false;
-      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('❌ Ошибка: $e')));
+    }
+  }
+
+  String _localizeError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'account-exists-with-different-credential':
+        return 'Этот email уже привязан к другому способу входа';
+      case 'invalid-credential':
+        return 'Неверные данные для входа';
+      case 'popup-blocked':
+        return 'Браузер заблокировал всплывающее окно. Разрешите попапы для этого сайта.';
+      case 'popup-closed-by-user':
+        return 'Окно входа было закрыто';
+      case 'unauthorized-domain':
+        return 'Домен не авторизован в Firebase. Добавьте его в Authentication → Settings → Authorized domains.';
+      default:
+        return e.message ?? 'Ошибка авторизации: ${e.code}';
     }
   }
 
@@ -85,15 +91,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: _busy ? null : _signIn,
-                      icon: _busy
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.login),
-                      label: Text(_busy ? 'Вход…' : 'Войти через Google'),
+                      onPressed: _signIn,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Войти через Google'),
                     ),
                   ),
                   if (widget.onSkip != null) ...[
@@ -101,24 +101,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: TextButton(
-                        onPressed: _busy ? null : widget.onSkip,
+                        onPressed: widget.onSkip,
                         child: const Text('Продолжить без входа'),
-                      ),
-                    ),
-                  ],
-                  if (_error != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: scheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _error!,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.onErrorContainer,
-                        ),
                       ),
                     ),
                   ],

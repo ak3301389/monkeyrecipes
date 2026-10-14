@@ -9,6 +9,7 @@ import '../icon_map.dart';
 import '../services/photo_service.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
+import '../sync_controller.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'auth_screen.dart';
@@ -55,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _persist() async {
     await StorageService.instance.saveRecipes(_recipes);
+    await SyncController.instance.pushToCloud();
   }
 
   @override
