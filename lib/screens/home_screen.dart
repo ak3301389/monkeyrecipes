@@ -9,8 +9,6 @@ import '../icon_map.dart';
 import '../services/photo_service.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
-import '../services/update_service.dart';
-import '../widgets/update_dialog.dart';
 import '../sync_controller.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
@@ -85,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _buildBody(),
         ),
       ),
-      floatingActionButton: _buildFab(),
+      floatingActionButton: _tabIndex == 0 ? _buildFab() : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabIndex,
         onDestinationSelected: (i) => setState(() => _tabIndex = i),
@@ -161,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: _buildFab(),
+      floatingActionButton: _tabIndex == 0 ? _buildFab() : null,
     );
   }
 
@@ -428,7 +426,6 @@ class _SettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
     return ListView(
@@ -467,96 +464,10 @@ class _SettingsTab extends StatelessWidget {
           },
         ),
         const SizedBox(height: 24),
-        Text(
-          'Данные',
-          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          tileColor: scheme.surfaceContainerLow,
-          leading: const Icon(Icons.file_upload_outlined),
-          title: const Text('Экспорт в JSON'),
-          subtitle: const Text('Появится в следующем шаге'),
-          onTap: () => _showComingSoon(context, 'Экспорт'),
-        ),
-        const SizedBox(height: 8),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          tileColor: scheme.surfaceContainerLow,
-          leading: const Icon(Icons.file_download_outlined),
-          title: const Text('Импорт из JSON'),
-          subtitle: const Text('Появится в следующем шаге'),
-          onTap: () => _showComingSoon(context, 'Импорт'),
-        ),
+
         const SizedBox(height: 24),
-        Text(
-          'Синхронизация',
-          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          tileColor: scheme.surfaceContainerLow,
-          leading: const Icon(Icons.cloud_outlined),
-          title: const Text('Firebase'),
-          subtitle: const Text('Появится позже'),
-          onTap: () => _showComingSoon(context, 'Firebase'),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Обновления',
-          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          tileColor: scheme.surfaceContainerLow,
-          leading: const Icon(Icons.system_update_alt),
-          title: const Text('Проверить обновления'),
-          subtitle: const Text('Проверить наличие новой версии'),
-          onTap: () => _checkUpdates(context),
-        ),
       ],
     );
-  }
-
-  Future<void> _checkUpdates(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Проверяем…')));
-
-    final info = await UpdateService.instance.checkForUpdate();
-    if (!context.mounted) return;
-    messenger.hideCurrentSnackBar();
-
-    if (info == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Обновлений нет — у вас последняя версия'),
-        ),
-      );
-      return;
-    }
-    await showDialog(
-      context: context,
-      builder: (_) => UpdateDialog(info: info),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$feature — в разработке')));
   }
 }
 
