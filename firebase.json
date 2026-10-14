@@ -1,17 +1,1 @@
-{
-    "hosting": {
-        "site": "monkeyrecipes",
-        "public": "build/web",
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ],
-        "rewrites": [
-            {
-                "source": "**",
-                "destination": "/index.html"
-            }
-        ]
-    }
-}
+{"hosting":{"site":"monkeyrecipes","public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]},"flutter":{"platforms":{"android":{"default":{"projectId":"monkeyrecipes-b6770","appId":"1:868705464245:android:f257fc7c8a5e7f94d533fc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"monkeyrecipes-b6770","configurations":{"android":"1:868705464245:android:f257fc7c8a5e7f94d533fc","web":"1:868705464245:web:521efffbb9cdfcc0d533fc"}}}}}}

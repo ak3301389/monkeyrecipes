@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "868705464245",
+    "project_id": "monkeyrecipes-b6770",
+    "storage_bucket": "monkeyrecipes-b6770.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:868705464245:android:f257fc7c8a5e7f94d533fc",
+        "android_client_info": {
+          "package_name": "com.ak3301389.recipes_book"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "868705464245-44nooa63fnd0tpqsk40h8batsvhlj15s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARCwxw_CqP2Rhez858vxUaz9rbsvkCqqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "868705464245-44nooa63fnd0tpqsk40h8batsvhlj15s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

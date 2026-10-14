@@ -37,11 +37,16 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
   final _ingredientNameCtrls = <TextEditingController>[];
   final _ingredientAmountCtrls = <TextEditingController>[];
   final _ingredientUnitCtrls = <TextEditingController>[];
+  final _ingredientNameFocusNodes = <FocusNode>[];
 
   late final List<RecipeStep> _steps;
   final _stepCtrls = <TextEditingController>[];
+  final _stepFocusNodes = <FocusNode>[];
   final _stepPhotos = <String?>[]; // data-URL или null
   bool _stepPhotoBusy = false;
+
+  final _ingredientsEndKey = GlobalKey();
+  final _stepsEndKey = GlobalKey();
 
   @override
   void initState() {
@@ -59,10 +64,12 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     _steps = List<RecipeStep>.from(r?.steps ?? []);
     for (final s in _steps) {
       _stepCtrls.add(TextEditingController(text: s.text));
+      _stepFocusNodes.add(FocusNode());
       _stepPhotos.add(s.photoUrl);
     }
     for (final ing in _ingredients) {
       _ingredientNameCtrls.add(TextEditingController(text: ing.name));
+      _ingredientNameFocusNodes.add(FocusNode());
       _ingredientAmountCtrls.add(
         TextEditingController(text: ing.amount > 0 ? _trimNum(ing.amount) : ''),
       );
@@ -100,6 +107,12 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     }
     for (final c in _stepCtrls) {
       c.dispose();
+    }
+    for (final f in _stepFocusNodes) {
+      f.dispose();
+    }
+    for (final f in _ingredientNameFocusNodes) {
+      f.dispose();
     }
     super.dispose();
   }
@@ -191,9 +204,11 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               ),
               const SizedBox(height: 20),
               _IngredientsSection(
+                endKey: _ingredientsEndKey,
                 nameCtrls: _ingredientNameCtrls,
                 amountCtrls: _ingredientAmountCtrls,
                 unitCtrls: _ingredientUnitCtrls,
+                nameFocusNodes: _ingredientNameFocusNodes,
                 knownNames: _ingredientNames,
                 knownUnits: _ingredientUnits,
                 onAdd: _addIngredient,
@@ -201,7 +216,9 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               ),
               const SizedBox(height: 12),
               _StepsSection(
+                endKey: _stepsEndKey,
                 stepCtrls: _stepCtrls,
+                stepFocusNodes: _stepFocusNodes,
                 stepPhotos: _stepPhotos,
                 photoBusy: _stepPhotoBusy,
                 onAdd: _addStep,
@@ -212,6 +229,11 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddMenu,
+        tooltip: 'Добавить',
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -319,11 +341,61 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
     Navigator.of(context).pop(recipe);
   }
 
+  Future<void> _showAddMenu() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.shopping_basket_outlined),
+              title: const Text('Добавить ингредиент'),
+              onTap: () => Navigator.of(ctx).pop('ingredient'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_list_numbered),
+              title: const Text('Добавить шаг'),
+              onTap: () => Navigator.of(ctx).pop('step'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    if (result == 'ingredient') {
+      _addIngredient();
+    } else if (result == 'step') {
+      _addStep();
+    }
+  }
+
   void _addIngredient() {
+    final node = FocusNode();
     setState(() {
       _ingredientNameCtrls.add(TextEditingController());
       _ingredientAmountCtrls.add(TextEditingController());
       _ingredientUnitCtrls.add(TextEditingController());
+      _ingredientNameFocusNodes.add(node);
+    });
+    _scrollToKey(_ingredientsEndKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) node.requestFocus();
+    });
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.5,
+      );
     });
   }
 
@@ -332,19 +404,31 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       _ingredientNameCtrls.removeAt(index).dispose();
       _ingredientAmountCtrls.removeAt(index).dispose();
       _ingredientUnitCtrls.removeAt(index).dispose();
+      if (index < _ingredientNameFocusNodes.length) {
+        _ingredientNameFocusNodes.removeAt(index).dispose();
+      }
     });
   }
 
   void _addStep() {
+    final node = FocusNode();
     setState(() {
       _stepCtrls.add(TextEditingController());
+      _stepFocusNodes.add(node);
       _stepPhotos.add(null);
+    });
+    _scrollToKey(_stepsEndKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) node.requestFocus();
     });
   }
 
   void _removeStep(int index) {
     setState(() {
       _stepCtrls.removeAt(index).dispose();
+      if (index < _stepFocusNodes.length) {
+        _stepFocusNodes.removeAt(index).dispose();
+      }
       _stepPhotos.removeAt(index);
     });
   }
@@ -383,18 +467,22 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
 }
 
 class _IngredientsSection extends StatelessWidget {
+  final GlobalKey? endKey;
   final List<TextEditingController> nameCtrls;
   final List<TextEditingController> amountCtrls;
   final List<TextEditingController> unitCtrls;
+  final List<FocusNode> nameFocusNodes;
   final List<String> knownNames;
   final List<String> knownUnits;
   final VoidCallback onAdd;
   final void Function(int index) onRemove;
 
   const _IngredientsSection({
+    this.endKey,
     required this.nameCtrls,
     required this.amountCtrls,
     required this.unitCtrls,
+    required this.nameFocusNodes,
     required this.knownNames,
     required this.knownUnits,
     required this.onAdd,
@@ -419,12 +507,6 @@ class _IngredientsSection extends StatelessWidget {
               'Ингредиенты',
               style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const Spacer(),
-            IconButton(
-              tooltip: 'Добавить ингредиент',
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -438,7 +520,9 @@ class _IngredientsSection extends StatelessWidget {
           )
         else
           ...List.generate(nameCtrls.length, (i) {
+            final isLast = i == nameCtrls.length - 1;
             return Padding(
+              key: isLast ? endKey : null,
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,6 +531,9 @@ class _IngredientsSection extends StatelessWidget {
                     flex: 3,
                     child: _IngredientNameField(
                       controller: nameCtrls[i],
+                      focusNode: i < nameFocusNodes.length
+                          ? nameFocusNodes[i]
+                          : null,
                       suggestions: knownNames,
                     ),
                   ),
@@ -487,7 +574,9 @@ class _IngredientsSection extends StatelessWidget {
 }
 
 class _StepsSection extends StatelessWidget {
+  final GlobalKey? endKey;
   final List<TextEditingController> stepCtrls;
+  final List<FocusNode> stepFocusNodes;
   final List<String?> stepPhotos;
   final bool photoBusy;
   final VoidCallback onAdd;
@@ -496,7 +585,9 @@ class _StepsSection extends StatelessWidget {
   final void Function(int index) onRemovePhoto;
 
   const _StepsSection({
+    this.endKey,
     required this.stepCtrls,
+    required this.stepFocusNodes,
     required this.stepPhotos,
     required this.photoBusy,
     required this.onAdd,
@@ -520,12 +611,6 @@ class _StepsSection extends StatelessWidget {
               'Шаги приготовления',
               style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const Spacer(),
-            IconButton(
-              tooltip: 'Добавить шаг',
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -539,7 +624,9 @@ class _StepsSection extends StatelessWidget {
           )
         else
           ...List.generate(stepCtrls.length, (i) {
+            final isLast = i == stepCtrls.length - 1;
             return Padding(
+              key: isLast ? endKey : null,
               padding: const EdgeInsets.only(bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,6 +651,9 @@ class _StepsSection extends StatelessWidget {
                       Expanded(
                         child: TextField(
                           controller: stepCtrls[i],
+                          focusNode: i < stepFocusNodes.length
+                              ? stepFocusNodes[i]
+                              : null,
                           minLines: 1,
                           maxLines: 4,
                           decoration: const InputDecoration(
@@ -769,10 +859,12 @@ class _PhotoGalleryField extends StatelessWidget {
 /// Поле «Название ингредиента» с живым поиском по справочнику.
 class _IngredientNameField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final List<String> suggestions;
 
   const _IngredientNameField({
     required this.controller,
+    this.focusNode,
     required this.suggestions,
   });
 
@@ -780,7 +872,7 @@ class _IngredientNameField extends StatelessWidget {
   Widget build(BuildContext context) {
     return RawAutocomplete<String>(
       textEditingController: controller,
-      focusNode: FocusNode(),
+      focusNode: focusNode ?? FocusNode(),
       optionsBuilder: (value) {
         final q = value.text.trim().toLowerCase();
         if (q.isEmpty) return const Iterable<String>.empty();
