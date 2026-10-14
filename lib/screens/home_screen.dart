@@ -9,9 +9,11 @@ import '../icon_map.dart';
 import '../services/photo_service.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
 import '../sync_controller.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
+import '../widgets/update_dialog.dart';
 import 'auth_screen.dart';
 import 'categories_screen.dart';
 import 'recipe_detail_screen.dart';
@@ -34,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Recipe> _recipes = [];
   List<Category> _categories = [];
   bool _loading = true;
-  String? _filterCategoryId; // null = все
+  String? _filterCategoryId;
 
   @override
   void initState() {
@@ -69,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ───────── Узкий экран: NavigationBar снизу ─────────
   Widget _buildNarrow() {
     return Scaffold(
       appBar: _buildAppBar(),
@@ -113,7 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ───────── Широкий экран: NavigationRail слева ─────────
   Widget _buildWide() {
     return Scaffold(
       appBar: _buildAppBar(),
@@ -204,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => const CategoriesScreen()));
     if (!mounted) return;
-    // Обновляем список категорий, если что-то изменилось.
     final cats = await StorageService.instance.loadCategories();
     if (!mounted) return;
     setState(() => _categories = cats);
@@ -431,7 +430,7 @@ class _SettingsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
-        _AccountSection(),
+        const _AccountSection(),
         const SizedBox(height: 24),
         Text(
           'Оформление',
@@ -464,9 +463,47 @@ class _SettingsTab extends StatelessWidget {
           },
         ),
         const SizedBox(height: 24),
-
-        const SizedBox(height: 24),
+        Text(
+          'Обновления',
+          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 12),
+        ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          leading: const Icon(Icons.system_update_alt),
+          title: const Text('Проверить обновления'),
+          subtitle: const Text('Найти новую версию приложения'),
+          onTap: () => _checkUpdates(context),
+        ),
       ],
+    );
+  }
+
+  Future<void> _checkUpdates(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Проверяем…')));
+
+    final info = await UpdateService.instance.checkForUpdate();
+    if (!context.mounted) return;
+    messenger.hideCurrentSnackBar();
+
+    if (info == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Обновлений нет — у вас последняя версия'),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    await showDialog(
+      context: context,
+      builder: (_) => UpdateDialog(info: info),
     );
   }
 }
@@ -745,8 +782,6 @@ class _CategoryFilterBarState extends State<_CategoryFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: avoid_print
-    print('[FilterBar] build called, categories=${widget.categories.length}');
     if (widget.categories.isEmpty) return const SizedBox.shrink();
 
     final chipSide = BorderSide.none;

@@ -2,7 +2,7 @@ name: recipes_book
 description: "Книга рецептов"
 publish_to: 'none'
 
-version: 1.6.0+10
+version: 1.6.0+11
 
 environment:
   sdk: ^3.13.0

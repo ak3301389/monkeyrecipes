@@ -11,6 +11,8 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/storage_service.dart';
+import 'services/update_service.dart';
+import 'widgets/update_dialog.dart';
 import 'sync_controller.dart';
 import 'theme.dart';
 
@@ -19,6 +21,18 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SyncController.instance.start();
   runApp(const RecipesBookApp());
+  WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdates());
+}
+
+Future<void> _checkForUpdates() async {
+  final info = await UpdateService.instance.checkForUpdate();
+  if (info == null) return;
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null || !ctx.mounted) return;
+  showDialog(
+    context: ctx,
+    builder: (_) => UpdateDialog(info: info),
+  );
 }
 
 /// Глобальный нотификатор режима темы.
