@@ -9,7 +9,9 @@ import '../icon_map.dart';
 import '../services/photo_service.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
+import '../services/auth_service.dart';
 import '../theme.dart';
+import 'auth_screen.dart';
 import 'categories_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
@@ -442,6 +444,8 @@ class _SettingsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
+        _AccountSection(),
+        const SizedBox(height: 24),
         Text(
           'Оформление',
           style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -887,6 +891,174 @@ class _CategoryFilterBarState extends State<_CategoryFilterBar> {
               child: row,
             )
           : row,
+    );
+  }
+}
+
+/// Раздел «Аккаунт» в настройках.
+class _AccountSection extends StatefulWidget {
+  const _AccountSection();
+
+  @override
+  State<_AccountSection> createState() => _AccountSectionState();
+}
+
+class _AccountSectionState extends State<_AccountSection> {
+  Future<void> _signIn() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const AuthScreen()));
+  }
+
+  Future<void> _signOut() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Выйти из аккаунта?'),
+        content: const Text(
+          'Данные останутся в облаке и на этом устройстве. Вы сможете войти снова в любой момент.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Выйти'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await AuthService.instance.signOut();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return StreamBuilder(
+      stream: AuthService.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Аккаунт',
+              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            if (user == null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cloud_off_outlined,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Вы не вошли',
+                                style: text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Войдите, чтобы рецепты синхронизировались между устройствами',
+                                style: text.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _signIn,
+                        icon: const Icon(Icons.login),
+                        label: const Text('Войти через Google'),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: scheme.secondaryContainer,
+                          child: Icon(
+                            Icons.person,
+                            color: scheme.onSecondaryContainer,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.displayName ?? 'Пользователь',
+                                style: text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                user.email ?? '',
+                                style: text.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.cloud_done_outlined, color: scheme.primary),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _signOut,
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Выйти'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

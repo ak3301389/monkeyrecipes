@@ -16,6 +16,7 @@ class StorageService {
   static const _kIngredientNames = 'ingredient_names';
   static const _kIngredientUnits = 'ingredient_units';
   static const _kShoppingItems = 'shopping_items';
+  static const _kSkipAuth = 'skip_auth';
 
   SharedPreferences? _prefs;
 
@@ -134,6 +135,18 @@ class StorageService {
       if (t.isNotEmpty) set.add(t);
     }
     await saveIngredientUnits(set.toList());
+  }
+
+  // ───────── Пропуск входа ─────────
+
+  Future<bool> loadSkipAuth() async {
+    final p = await _p();
+    return p.getBool(_kSkipAuth) ?? false;
+  }
+
+  Future<void> saveSkipAuth(bool value) async {
+    final p = await _p();
+    await p.setBool(_kSkipAuth, value);
   }
 
   // ───────── Список покупок ─────────

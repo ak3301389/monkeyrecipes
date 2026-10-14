@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
-
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/auth_service.dart';
 import 'services/storage_service.dart';
 import 'theme.dart';
 
@@ -65,6 +69,7 @@ class RecipesBookApp extends StatelessWidget {
 }
 
 /// Загружает сохранённый режим темы перед показом главного экрана.
+/// Слушает состояние входа и решает, что показать: приложение или экран входа.
 class _Bootstrap extends StatefulWidget {
   const _Bootstrap();
 
@@ -73,29 +78,64 @@ class _Bootstrap extends StatefulWidget {
 }
 
 class _BootstrapState extends State<_Bootstrap> {
-  bool _ready = false;
+  bool _themeReady = false;
+  bool _skipAuth = false;
+  bool _skipAuthLoaded = false;
+  User? _user;
+  bool _authChecked = false;
+  StreamSubscription<User?>? _authSub;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _authSub = AuthService.instance.authStateChanges().listen((user) {
+      if (!mounted) return;
+      setState(() {
+        _user = user;
+        _authChecked = true;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
-    final raw = await StorageService.instance.loadThemeMode();
+    final s = StorageService.instance;
+    final raw = await s.loadThemeMode();
+    final skip = await s.loadSkipAuth();
     themeModeNotifier.value = AppThemeMode.values.firstWhere(
       (m) => m.name == raw,
       orElse: () => AppThemeMode.system,
     );
     if (!mounted) return;
-    setState(() => _ready = true);
+    setState(() {
+      _themeReady = true;
+      _skipAuth = skip;
+      _skipAuthLoaded = true;
+    });
+  }
+
+  Future<void> _skipAuthAndContinue() async {
+    await StorageService.instance.saveSkipAuth(true);
+    if (!mounted) return;
+    setState(() => _skipAuth = true);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) {
+    if (!_themeReady || !_skipAuthLoaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return const HomeScreen();
+    if (!_authChecked) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_user != null) return const HomeScreen();
+    if (_skipAuth) return const HomeScreen();
+    return AuthScreen(onSkip: _skipAuthAndContinue);
   }
 }
