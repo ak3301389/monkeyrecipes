@@ -153,8 +153,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 controller: _titleCtrl,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
-                  labelText: 'Название',
-                  hintText: 'Например: Борщ',
+                  hintText: 'Название (например: Борщ)',
                 ),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Введите название' : null,
@@ -162,7 +161,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _categoryId,
-                decoration: const InputDecoration(labelText: 'Категория'),
+                decoration: const InputDecoration(hintText: 'Категория'),
                 items: [
                   const DropdownMenuItem<String>(
                     value: null,
@@ -183,8 +182,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
-                  labelText: 'Время приготовления (мин)',
-                  hintText: '30',
+                  hintText: 'Время приготовления в минутах (например 30)',
                 ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return null;
@@ -198,8 +196,7 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
                 controller: _notesCtrl,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  labelText: 'Заметки',
-                  hintText: 'Советы, варианты, источники',
+                  hintText: 'Заметки: советы, варианты, источники',
                 ),
               ),
               const SizedBox(height: 20),
@@ -523,46 +520,49 @@ class _IngredientsSection extends StatelessWidget {
             final isLast = i == nameCtrls.length - 1;
             return Padding(
               key: isLast ? endKey : null,
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: _IngredientNameField(
-                      controller: nameCtrls[i],
-                      focusNode: i < nameFocusNodes.length
-                          ? nameFocusNodes[i]
-                          : null,
-                      suggestions: knownNames,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: amountCtrls[i],
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _IngredientNameField(
+                          controller: nameCtrls[i],
+                          focusNode: i < nameFocusNodes.length
+                              ? nameFocusNodes[i]
+                              : null,
+                          suggestions: knownNames,
+                        ),
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Кол-во',
-                        hintText: '2',
+                      IconButton(
+                        tooltip: 'Удалить',
+                        onPressed: () => onRemove(i),
+                        icon: const Icon(Icons.close),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: _IngredientUnitField(
-                      controller: unitCtrls[i],
-                      suggestions: knownUnits,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Удалить',
-                    onPressed: () => onRemove(i),
-                    icon: const Icon(Icons.close),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: amountCtrls[i],
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(hintText: 'Кол-во'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _IngredientUnitField(
+                          controller: unitCtrls[i],
+                          suggestions: knownUnits,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -884,10 +884,7 @@ class _IngredientNameField extends StatelessWidget {
           controller: ctrl,
           focusNode: focus,
           onSubmitted: (_) => onSubmit(),
-          decoration: const InputDecoration(
-            labelText: 'Название',
-            hintText: 'Свёкла',
-          ),
+          decoration: const InputDecoration(hintText: 'Название'),
         );
       },
       optionsViewBuilder: (context, onSelected, options) {
@@ -948,8 +945,7 @@ class _IngredientUnitField extends StatelessWidget {
           focusNode: focus,
           onSubmitted: (_) => onSubmit(),
           decoration: const InputDecoration(
-            labelText: 'Ед.',
-            hintText: 'шт',
+            hintText: 'Ед.',
             suffixIcon: Icon(Icons.arrow_drop_down, size: 20),
           ),
         );

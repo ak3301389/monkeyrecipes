@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -24,23 +23,6 @@ class _AuthScreenState extends State<AuthScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text('❌ Ошибка: $e')));
-    }
-  }
-
-  String _localizeError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'account-exists-with-different-credential':
-        return 'Этот email уже привязан к другому способу входа';
-      case 'invalid-credential':
-        return 'Неверные данные для входа';
-      case 'popup-blocked':
-        return 'Браузер заблокировал всплывающее окно. Разрешите попапы для этого сайта.';
-      case 'popup-closed-by-user':
-        return 'Окно входа было закрыто';
-      case 'unauthorized-domain':
-        return 'Домен не авторизован в Firebase. Добавьте его в Authentication → Settings → Authorized domains.';
-      default:
-        return e.message ?? 'Ошибка авторизации: ${e.code}';
     }
   }
 

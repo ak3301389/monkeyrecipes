@@ -12,6 +12,8 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/storage_service.dart';
+import 'services/update_service.dart';
+import 'widgets/update_dialog.dart';
 import 'sync_controller.dart';
 import 'theme.dart';
 
@@ -20,11 +22,30 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SyncController.instance.start();
   runApp(const RecipesBookApp());
+  // Автопроверка обновлений — после первого кадра, чтобы не тормозить запуск.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _checkForUpdates();
+  });
+}
+
+Future<void> _checkForUpdates() async {
+  final info = await UpdateService.instance.checkForUpdate();
+  if (info == null) return;
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  if (!ctx.mounted) return;
+  showDialog(
+    context: ctx,
+    builder: (_) => UpdateDialog(info: info),
+  );
 }
 
 /// Глобальный нотификатор режима темы.
 final ValueNotifier<AppThemeMode> themeModeNotifier =
     ValueNotifier<AppThemeMode>(AppThemeMode.system);
+
+/// Глобальный ключ навигатора — нужен для показа диалогов из `main`.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class RecipesBookApp extends StatelessWidget {
   const RecipesBookApp({super.key});
@@ -39,6 +60,7 @@ class RecipesBookApp extends StatelessWidget {
             return MaterialApp(
               title: 'Книга рецептов',
               debugShowCheckedModeBanner: false,
+              navigatorKey: navigatorKey,
               themeMode: _toMaterialThemeMode(mode),
               theme: buildLightTheme(dynamicScheme: lightDynamic?.harmonized()),
               darkTheme: buildDarkTheme(

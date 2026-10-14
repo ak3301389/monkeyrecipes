@@ -73,6 +73,7 @@ ThemeData _buildTheme(ColorScheme scheme) {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: scheme.surfaceContainerHighest,
+      isDense: false,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
@@ -85,7 +86,10 @@ ThemeData _buildTheme(ColorScheme scheme) {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: scheme.primary, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      labelStyle: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
+      floatingLabelStyle: TextStyle(color: scheme.primary, fontSize: 14),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(

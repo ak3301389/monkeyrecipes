@@ -196,10 +196,7 @@ class _CategoryDialogState extends State<_CategoryDialog> {
             TextField(
               controller: _nameCtrl,
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Название',
-                hintText: 'Например: Супы',
-              ),
+              decoration: const InputDecoration(hintText: 'Название категории'),
             ),
             const SizedBox(height: 16),
             Text('Иконка', style: Theme.of(context).textTheme.labelLarge),

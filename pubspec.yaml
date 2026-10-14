@@ -2,7 +2,7 @@ name: recipes_book
 description: "Книга рецептов"
 publish_to: 'none'
 
-version: 1.3.0+5
+version: 1.3.0+7
 
 environment:
   sdk: ^3.13.0
@@ -29,10 +29,11 @@ dependencies:
   url_launcher: ^6.3.0
   open_filex: ^4.5.0
   path_provider: ^2.1.4
+  github_release_apk_updater: ^1.0.7
 
   # Утилиты
   intl: ^0.20.3
-  package_info_plus: ^8.1.0
+  package_info_plus: ^10.2.2
 
   # UI
   dynamic_color: ^1.7.0

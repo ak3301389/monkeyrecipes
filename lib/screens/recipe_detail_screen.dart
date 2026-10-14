@@ -273,14 +273,23 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         );
       return;
     }
+
+    // Диалог выбора ингредиентов (по умолчанию — ничего не отмечено).
+    final selected = await showDialog<List<int>>(
+      context: context,
+      builder: (_) =>
+          _SelectIngredientsDialog(ingredients: _recipe.ingredients),
+    );
+    if (selected == null || selected.isEmpty || !mounted) return;
+
     final s = StorageService.instance;
     final existing = await s.loadShoppingItems();
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final added = <ShoppingItem>[];
     var counter = 0;
-    for (final ing in _recipe.ingredients) {
-      // Объединение только при совпадении названия и единицы (регистр не важен).
+    for (final i in selected) {
+      final ing = _recipe.ingredients[i];
       final idx = existing.indexWhere(
         (e) =>
             !e.done &&
@@ -516,6 +525,89 @@ class _StepRow extends StatelessWidget {
           Text(step.text, style: text.bodyLarge),
         ],
       ),
+    );
+  }
+}
+
+/// Диалог выбора ингредиентов для добавления в список покупок.
+/// По умолчанию все чекбоксы сняты.
+class _SelectIngredientsDialog extends StatefulWidget {
+  final List<Ingredient> ingredients;
+
+  const _SelectIngredientsDialog({required this.ingredients});
+
+  @override
+  State<_SelectIngredientsDialog> createState() =>
+      _SelectIngredientsDialogState();
+}
+
+class _SelectIngredientsDialogState extends State<_SelectIngredientsDialog> {
+  final Set<int> _selected = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return AlertDialog(
+      title: const Text('Что добавить в покупки?'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Отметьте нужные ингредиенты', style: text.bodySmall),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.ingredients.length,
+                itemBuilder: (context, i) {
+                  final ing = widget.ingredients[i];
+                  final amount = ing.amount > 0
+                      ? (ing.amount == ing.amount.roundToDouble()
+                            ? ing.amount.toInt().toString()
+                            : ing.amount.toString())
+                      : '';
+                  final qty = [
+                    amount,
+                    ing.unit,
+                  ].where((e) => e.isNotEmpty).join(' ');
+                  return CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    value: _selected.contains(i),
+                    onChanged: (v) {
+                      setState(() {
+                        if (v == true) {
+                          _selected.add(i);
+                        } else {
+                          _selected.remove(i);
+                        }
+                      });
+                    },
+                    title: Text(ing.name),
+                    subtitle: qty.isEmpty ? null : Text(qty),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: _selected.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(_selected.toList()),
+          child: Text(
+            _selected.isEmpty ? 'Добавить' : 'Добавить (${_selected.length})',
+          ),
+        ),
+      ],
     );
   }
 }

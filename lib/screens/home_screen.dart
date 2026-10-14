@@ -9,6 +9,8 @@ import '../icon_map.dart';
 import '../services/photo_service.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 import '../sync_controller.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
@@ -414,20 +416,6 @@ class _RecipesTab extends StatelessWidget {
   }
 }
 
-// ───────── Вкладка «Избранное» ─────────
-class _FavoritesTab extends StatelessWidget {
-  const _FavoritesTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _EmptyState(
-      icon: Icons.star_border,
-      title: 'Избранное пока пусто',
-      subtitle: 'Отмечайте рецепты звёздочкой, чтобы они появились здесь',
-    );
-  }
-}
-
 // ───────── Вкладка «Настройки» ─────────
 class _SettingsTab extends StatelessWidget {
   final AppThemeMode themeMode;
@@ -534,10 +522,34 @@ class _SettingsTab extends StatelessWidget {
           tileColor: scheme.surfaceContainerLow,
           leading: const Icon(Icons.system_update_alt),
           title: const Text('Проверить обновления'),
-          subtitle: const Text('Появится позже'),
-          onTap: () => _showComingSoon(context, 'Обновления'),
+          subtitle: const Text('Проверить наличие новой версии'),
+          onTap: () => _checkUpdates(context),
         ),
       ],
+    );
+  }
+
+  Future<void> _checkUpdates(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Проверяем…')));
+
+    final info = await UpdateService.instance.checkForUpdate();
+    if (!context.mounted) return;
+    messenger.hideCurrentSnackBar();
+
+    if (info == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Обновлений нет — у вас последняя версия'),
+        ),
+      );
+      return;
+    }
+    await showDialog(
+      context: context,
+      builder: (_) => UpdateDialog(info: info),
     );
   }
 
