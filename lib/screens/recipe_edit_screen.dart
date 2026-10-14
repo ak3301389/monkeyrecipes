@@ -57,7 +57,8 @@ class _RecipeEditScreenState extends State<RecipeEditScreen> {
       text: (r?.cookingMinutes ?? 0) > 0 ? r!.cookingMinutes.toString() : '',
     );
     _notesCtrl = TextEditingController(text: r?.notes ?? '');
-    _categoryId = r?.categoryId;
+    final catId = r?.categoryId ?? '';
+    _categoryId = catId.isEmpty ? null : catId;
     _favorite = r?.favorite ?? false;
     _photos.addAll(r?.photos ?? []);
     _ingredients = List<Ingredient>.from(r?.ingredients ?? []);

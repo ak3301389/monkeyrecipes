@@ -15,6 +15,7 @@ import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/update_dialog.dart';
 import 'auth_screen.dart';
+import 'import_recipe_screen.dart';
 import 'categories_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipe_edit_screen.dart';
@@ -170,6 +171,12 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         if (_tabIndex == 0)
           IconButton(
+            tooltip: 'Импорт по ссылке',
+            icon: const Icon(Icons.link),
+            onPressed: _openImport,
+          ),
+        if (_tabIndex == 0)
+          IconButton(
             tooltip: 'Категории',
             icon: const Icon(Icons.category_outlined),
             onPressed: _openCategories,
@@ -198,6 +205,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (result == null || !mounted) return;
     await _openRecipe(result);
+  }
+
+  Future<void> _openImport() async {
+    final result = await Navigator.of(context).push<Recipe>(
+      MaterialPageRoute(builder: (_) => const ImportRecipeScreen()),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _recipes.insert(0, result));
+    await _persist();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text('Рецепт «${result.title}» импортирован')),
+      );
   }
 
   Future<void> _openCategories() async {

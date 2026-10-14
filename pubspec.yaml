@@ -2,7 +2,7 @@ name: recipes_book
 description: "Книга рецептов"
 publish_to: 'none'
 
-version: 1.6.0+11
+version: 1.6.0+12
 
 environment:
   sdk: ^3.13.0
@@ -33,6 +33,9 @@ dependencies:
   # Утилиты
   intl: ^0.20.3
   package_info_plus: ^8.3.1
+
+  # Импорт рецептов
+  recipe_scraper: ^1.0.1
 
   # UI
   dynamic_color: ^1.7.0
