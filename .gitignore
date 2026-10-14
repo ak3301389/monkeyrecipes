@@ -49,3 +49,6 @@ app.*.map.json
 
 # Firebase CLI cache
 .firebase/
+
+# Собранные артефакты
+release/
