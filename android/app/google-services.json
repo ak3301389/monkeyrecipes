@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "868705464245-o5beebkfe2fmu64t2htptrbj11mc6tp5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ak3301389.recipes_book",
+            "certificate_hash": "6c98a9def2e643a81ef2b58f3b6bffbf119add0f"
+          }
+        },
+        {
           "client_id": "868705464245-44nooa63fnd0tpqsk40h8batsvhlj15s.apps.googleusercontent.com",
           "client_type": 3
         }
